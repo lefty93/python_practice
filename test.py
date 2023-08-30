@@ -13,20 +13,28 @@ password_input = getpass.getpass("Enter your password: ")
 
 loading_indicators = cycle(["|", "/", "-", "\\"])
 
+
 def loading_message():
     while scraping_in_progress:
         sys.stdout.write(f"\rScraping... {next(loading_indicators)}")
         sys.stdout.flush()
         time.sleep(0.2)
 
+
 def scrape_current_page(page):
     html = page.inner_html("div.row.panel-print")
     soup = BeautifulSoup(html, "html.parser")
     jobs = soup.find_all("a", attrs={"id": "job_position_title"})
-    companies = [span for span in soup.find_all('span', class_='text') if 'text-status' not in span.get('class') and
-       'text-job-status' not in span.get('class') and
-       'text-compare' not in span.get('class')]
-    job_company_list = [(job.text, company.text) for job, company in zip(jobs, companies)]
+    companies = [
+        span
+        for span in soup.find_all("span", class_="text")
+        if "text-status" not in span.get("class")
+        and "text-job-status" not in span.get("class")
+        and "text-compare" not in span.get("class")
+    ]
+    job_company_list = [
+        (job.text, company.text) for job, company in zip(jobs, companies)
+    ]
     return job_company_list
 
 
@@ -46,7 +54,7 @@ with sync_playwright() as p:
     password_locator.fill(password_input)
     login_locator.click()
     application_locator.click()
-    
+
     all_data = []
 
     found_next_button = True
@@ -73,13 +81,9 @@ with sync_playwright() as p:
 
         scraping_in_progress = False
         loading_thread.join()
-        
-        page.wait_for_load_state('networkidle')
+
+        page.wait_for_load_state("networkidle")
 
 df = pd.DataFrame(all_data, columns=["Job Title", "Company"])
 df.to_excel("testing.xlsx", sheet_name="Sheet1")
 print("\nScraping completed! Data saved successfully.")
-
-
-
-       
