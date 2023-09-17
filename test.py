@@ -25,13 +25,16 @@ def scrape_current_page(page):
     html = page.inner_html("div.row.panel-print")
     soup = BeautifulSoup(html, "html.parser")
     jobs = soup.find_all("a", attrs={"id": "job_position_title"})
-    companies = [
-        span
-        for span in soup.find_all("span", class_="text")
-        if "text-status" not in span.get("class")
-        and "text-job-status" not in span.get("class")
-        and "text-compare" not in span.get("class")
-    ]
+    companies = [] 
+    text_span = soup.find_all("span", class_="text")
+    for span in text_span:
+        if (
+            "text-status" not in span.get("class")
+            and "text-job-status" not in span.get("class")
+            and "text-compare" not in span.get("class")
+        ):
+            companies.append(span)
+            
     job_company_list = [
         (job.text, company.text) for job, company in zip(jobs, companies)
     ]
@@ -65,11 +68,7 @@ with sync_playwright() as p:
         loading_thread.start()
 
         current_page_data = scrape_current_page(page)
-        # for job, company in current_page_data:
-        #     print("Job Title:", job.text)
-        #     print("Company:", company.text)
-        #     print("\n")  # Add a newline for readability
-
+       
         all_data.extend(current_page_data)
 
         try:
